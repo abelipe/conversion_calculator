@@ -12,4 +12,4 @@ Java: The primary programming language used for this project.
 Object-Oriented Programming (OOP): The project is designed using OOP principles to ensure modularity, reusability, and maintainability
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License 
