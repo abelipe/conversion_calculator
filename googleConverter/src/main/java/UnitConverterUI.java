@@ -1,16 +1,97 @@
-
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 
 
 public class UnitConverterUI extends javax.swing.JFrame {
-    
+        // Define the conversion factors and formulas
+        private static final Map<String, Map<String, Double>> conversionFactors = new HashMap<>();
+        private static final Map<String, Map<String, String>> conversionFormulas = new HashMap<>();
+        private static final Map<String, Boolean> isDivision = new HashMap<>();
+
+    static {
+        // Initialize conversion factors for "Consumo de combustible"
+        Map<String, Double> fuelConsumptionFactors = new HashMap<>();
+        fuelConsumptionFactors.put("Milla por galon americano-Millas por galon (imperial)", 1.201);
+        fuelConsumptionFactors.put("Milla por galon americano-Kilometro por litro", 2.352);
+        fuelConsumptionFactors.put("Milla por galon americano-Litro por 100 kilometros", 235.215);
+        fuelConsumptionFactors.put("Millas por galon (imperial)-Milla por galon americano", 1 / 1.201);
+        fuelConsumptionFactors.put("Millas por galon (imperial)-Kilometro por litro", 2.825);
+        fuelConsumptionFactors.put("Millas por galon (imperial)-Litro por 100 kilometros", 282.481);
+        fuelConsumptionFactors.put("Kilometro por litro-Milla por galon americano", 1 / 2.352);
+        fuelConsumptionFactors.put("Kilometro por litro-Millas por galon (imperial)", 1 / 2.825);
+        fuelConsumptionFactors.put("Kilometro por litro-Litro por 100 kilometros", 100.0);
+        fuelConsumptionFactors.put("Litro por 100 kilometros-Milla por galon americano", 235.215);
+        fuelConsumptionFactors.put("Litro por 100 kilometros-Millas por galon (imperial)", 282.481);
+        fuelConsumptionFactors.put("Litro por 100 kilometros-Kilometro por litro", 100.0);
+        conversionFactors.put("Consumo de combustible", fuelConsumptionFactors);
+
+        // Initialize conversion formulas for "Consumo de combustible"
+        Map<String, String> fuelConsumptionFormulas = new HashMap<>();
+        fuelConsumptionFormulas.put("Milla por galon americano-Millas por galon (imperial)", "Multiplicar el valor de milla por galon americano por 1.201");
+        fuelConsumptionFormulas.put("Milla por galon americano-Kilometro por litro", "Multiplicar el valor de milla por galon americano por 2.352");
+        fuelConsumptionFormulas.put("Milla por galon americano-Litro por 100 kilometros", "Dividir el valor de milla por galon americano por 235.215");
+        fuelConsumptionFormulas.put("Millas por galon (imperial)-Milla por galon americano", "Dividir el valor de millas por galon (imperial) por 1.201");
+        fuelConsumptionFormulas.put("Millas por galon (imperial)-Kilometro por litro", "Multiplicar el valor de millas por galon (imperial) por 2.825");
+        fuelConsumptionFormulas.put("Millas por galon (imperial)-Litro por 100 kilometros", "Dividir 282.481 por el valor de millas por galon (imperial)");
+        fuelConsumptionFormulas.put("Kilometro por litro-Milla por galon americano", "Dividir el valor de kilometro por litro por 2.352");
+        fuelConsumptionFormulas.put("Kilometro por litro-Millas por galon (imperial)", "Dividir el valor de kilometro por litro por 2.825");
+        fuelConsumptionFormulas.put("Kilometro por litro-Litro por 100 kilometros", "Dividir el valor de kilometro por litro por 100");
+        fuelConsumptionFormulas.put("Litro por 100 kilometros-Milla por galon americano", "Multiplicar el valor de litro por 100 kilometros por 235.215");
+        fuelConsumptionFormulas.put("Litro por 100 kilometros-Millas por galon (imperial)", "Multiplicar el valor de litro por 100 kilometros por 282.481");
+        fuelConsumptionFormulas.put("Litro por 100 kilometros-Kilometro por litro", "Multiplicar el valor de litro por 100 kilometros por 100");
+        conversionFormulas.put("Consumo de combustible", fuelConsumptionFormulas);
+
+        // Initialize conversion factors for "Frecuencia"
+        Map<String, Double> frequencyFactors = new HashMap<>();
+        frequencyFactors.put("Hercio-Kilohercio", 1 / 1000.0);
+        frequencyFactors.put("Hercio-Megahercio", 1 / 1000000.0);
+        frequencyFactors.put("Hercio-Gigahercio", 1 / 1000000000.0);
+        frequencyFactors.put("Kilohercio-Hercio", 1000.0);
+        frequencyFactors.put("Kilohercio-Megahercio", 1 / 1000.0);
+        frequencyFactors.put("Kilohercio-Gigahercio", 1 / 1000000.0);
+        frequencyFactors.put("Megahercio-Hercio", 1000000.0);
+        frequencyFactors.put("Megahercio-Kilohercio", 1000.0);
+        frequencyFactors.put("Megahercio-Gigahercio", 1 / 1000.0);
+        frequencyFactors.put("Gigahercio-Hercio", 1000000000.0);
+        frequencyFactors.put("Gigahercio-Kilohercio", 1000000.0);
+        frequencyFactors.put("Gigahercio-Megahercio", 1000.0);
+        conversionFactors.put("Frecuencia", frequencyFactors);
+
+        // Initialize conversion formulas for "Frecuencia"
+        Map<String, String> frequencyFormulas = new HashMap<>();
+        frequencyFormulas.put("Hercio-Kilohercio", "Dividir el valor de hercio por 1000");
+        frequencyFormulas.put("Hercio-Megahercio", "Dividir el valor de hercio por 1000000");
+        frequencyFormulas.put("Hercio-Gigahercio", "Dividir el valor de hercio por 1000000000");
+        frequencyFormulas.put("Kilohercio-Hercio", "Multiplicar el valor de kilohercio por 1000");
+        frequencyFormulas.put("Kilohercio-Megahercio", "Dividir el valor de kilohercio por 1000");
+        frequencyFormulas.put("Kilohercio-Gigahercio", "Dividir el valor de kilohercio por 1000000");
+        frequencyFormulas.put("Megahercio-Hercio", "Multiplicar el valor de megahercio por 1000000");
+        frequencyFormulas.put("Megahercio-Kilohercio", "Multiplicar el valor de megahercio por 1000");
+        frequencyFormulas.put("Megahercio-Gigahercio", "Dividir el valor de megahercio por 1000");
+        frequencyFormulas.put("Gigahercio-Hercio", "Multiplicar el valor de gigahercio por 1000000000");
+        frequencyFormulas.put("Gigahercio-Kilohercio", "Multiplicar el valor de gigahercio por 1000000");
+        frequencyFormulas.put("Gigahercio-Megahercio", "Multiplicar el valor de gigahercio por 1000");
+        conversionFormulas.put("Frecuencia", frequencyFormulas);
+
+        // Initialize division flags for "Consumo de combustible"
+        isDivision.put("Milla por galon americano-Litro por 100 kilometros", true);
+        isDivision.put("Millas por galon (imperial)-Litro por 100 kilometros", true);
+        isDivision.put("Kilometro por litro-Litro por 100 kilometros", true);
+        isDivision.put("Litro por 100 kilometros-Milla por galon americano", true);
+        isDivision.put("Litro por 100 kilometros-Millas por galon (imperial)", true);
+        isDivision.put("Litro por 100 kilometros-Kilometro por litro", true);
+
+    }
+
     
     public UnitConverterUI() {
         initComponents();
@@ -104,23 +185,36 @@ public class UnitConverterUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+
     private void jTextField1KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField1KeyTyped
-        char c = evt.getKeyChar();
-        if (!Character.isDigit(c)) {
-            evt.consume();
-        }
-    jTextField2.setText(jTextField1.getText().isEmpty() ? "" : jTextField2.getText());
+        Optional.of(evt.getKeyChar())
+                .filter(Character::isDigit)
+                .ifPresentOrElse(
+                        c -> {},
+                        evt::consume
+                );
+        Optional.of(jTextField1.getText())
+                .filter(text -> !text.isEmpty())
+                .ifPresentOrElse(
+                        text -> jTextField2.setText(jTextField2.getText()),
+                        () -> jTextField2.setText("")
+                );
     }//GEN-LAST:event_jTextField1KeyTyped
-
+    
     private void jTextField2KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField2KeyTyped
-        char c = evt.getKeyChar();
-        if (!Character.isDigit(c)) {
-            evt.consume();
-        }
-    jTextField1.setText(jTextField2.getText().isEmpty() ? "" : jTextField1.getText());
+        Optional.of(evt.getKeyChar())
+                .filter(Character::isDigit)
+                .ifPresentOrElse(
+                        c -> {},
+                        evt::consume
+                );
+        Optional.of(jTextField2.getText())
+                .filter(text -> !text.isEmpty())
+                .ifPresentOrElse(
+                        text -> jTextField1.setText(jTextField1.getText()),
+                        () -> jTextField1.setText("")
+                );
     }//GEN-LAST:event_jTextField2KeyTyped
-
-  
     public static void main(String args[]) {
     java.awt.EventQueue.invokeLater(() -> {
         UnitConverterUI ui = new UnitConverterUI();
@@ -206,174 +300,75 @@ public class ComboBox3Handler extends ComboBoxHandler {
     jComboBox2.addItemListener(e -> comboBox2Handler.handleSelection(e));
 
     ComboBox3Handler comboBox3Handler = new ComboBox3Handler(jComboBox3, jComboBox1, jComboBox2, jTextField1, jTextField2);
-    jComboBox3.addItemListener(e -> {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-            comboBox3Handler.handleSelection(jComboBox3.getSelectedItem());
-        }
-    });
+    jComboBox3.addItemListener(e -> 
+    Optional.of(e)
+            .filter(event -> event.getStateChange() == ItemEvent.SELECTED)
+            .map(ItemEvent::getItem)
+            .ifPresent(comboBox3Handler::handleSelection)
+        );
 
 
     jTextField1.addKeyListener(new KeyAdapter() {
-    @Override
-    public void keyReleased(KeyEvent e) {
-        System.out.println("TextField 1: " + jTextField1.getText());
-        String value = jTextField1.getText();
-        if (!value.isEmpty()) {
-            double inputValue = Double.parseDouble(value);
-            String unit1 = (String) jComboBox1.getSelectedItem();
-            String unit2 = (String) jComboBox2.getSelectedItem();
-            String unit3 = (String) jComboBox3.getSelectedItem();
+        @Override
+        public void keyReleased(KeyEvent e) {
+            System.out.println("TextField 1: " + jTextField1.getText());
+            Optional.ofNullable(jTextField1.getText())
+                    .filter(value -> !value.isEmpty())
+                    .map(Double::parseDouble)
+                    .ifPresent(inputValue -> {
+                        String unit1 = Optional.ofNullable((String) jComboBox1.getSelectedItem()).orElse("");
+                        String unit2 = Optional.ofNullable((String) jComboBox2.getSelectedItem()).orElse("");
+                        String unit3 = Optional.ofNullable((String) jComboBox3.getSelectedItem()).orElse("");
 
-            double result = unit3.equals("Consumo de combustible")
-                    ? (unit1.equals("Milla por galon americano")
-                            ? (unit2.equals("Millas por galon (imperial)") ? inputValue * 1.201
-                                    : unit2.equals("Kilometro por litro") ? inputValue * 0.425144
-                                            : unit2.equals("Litro por 100 kilometros") ? 235.215 / inputValue
-                                                    : inputValue)
-                            : unit1.equals("Millas por galon (imperial)")
-                                    ? (unit2.equals("Milla por galon americano") ? inputValue / 1.201
-                                            : unit2.equals("Kilometro por litro") ? inputValue / 2.825
-                                                    : unit2.equals("Litro por 100 kilometros") ? 282.481 / inputValue
-                                                            : inputValue)
-                                    : unit1.equals("Kilometro por litro")
-                                            ? (unit2.equals("Milla por galon americano") ? inputValue / 0.425144
-                                                    : unit2.equals("Millas por galon (imperial)") ? inputValue * 2.825
-                                                            : unit2.equals("Litro por 100 kilometros") ? 100 / inputValue
-                                                                    : inputValue)
-                                            : unit1.equals("Litro por 100 kilometros")
-                                                    ? (unit2.equals("Milla por galon americano") ? 235.215 / inputValue
-                                                            : unit2.equals("Millas por galon (imperial)") ? 282.481 / inputValue
-                                                                    : unit2.equals("Kilometro por litro") ? 100 / inputValue
-                                                                            : inputValue)
-                                                    : inputValue)
-                    : (unit1.equals("Hercio")
-                            ? (unit2.equals("Kilohercio") ? inputValue / 1000
-                                    : unit2.equals("Megahercio") ? inputValue / 1000000
-                                            : unit2.equals("Gigahercio") ? inputValue / 1000000000
-                                                    : inputValue)
-                            : unit1.equals("Kilohercio")
-                                    ? (unit2.equals("Hercio") ? inputValue * 1000
-                                            : unit2.equals("Megahercio") ? inputValue / 1000
-                                                    : unit2.equals("Gigahercio") ? inputValue / 1000000
-                                                            : inputValue)
-                                    : unit1.equals("Megahercio")
-                                            ? (unit2.equals("Hercio") ? inputValue * 1000000
-                                                    : unit2.equals("Kilohercio") ? inputValue * 1000
-                                                            : unit2.equals("Gigahercio") ? inputValue / 1000
-                                                                    : inputValue)
-                                            : unit1.equals("Gigahercio")
-                                                    ? (unit2.equals("Hercio") ? inputValue * 1000000000
-                                                            : unit2.equals("Kilohercio") ? inputValue * 1000000
-                                                                    : unit2.equals("Megahercio") ? inputValue * 1000
-                                                                            : inputValue)
-                                                    : inputValue);
-            String formula = unit3.equals("Consumo de combustible")
-                    ? (unit1.equals("Milla por galon americano")
-                            ? (unit2.equals("Millas por galon (imperial)") ? "Multiplicar el valor de consumo de combustible por 1.201"
-                                    : unit2.equals("Kilometro por litro") ? "divide el valor de consumo de combustible entre 2.352"
-                                            : unit2.equals("Litro por 100 kilometros") ? "235.215/(1 US mpg) = 235.215 L/100 km"
-                                                    : "")
-                            : unit1.equals("Millas por galon (imperial)")
-                                    ? (unit2.equals("Milla por galon americano") ? "divide el valor de consumo de combustible entre 1.201"
-                                            : unit2.equals("Kilometro por litro") ? "para obtener un resultado aproximado, divide el valor de consumo de combustible entre 2.825"
-                                                    : unit2.equals("Litro por 100 kilometros") ? "282.481/(1 I mpg) = 282.481 L/100 km"
-                                                            : "")
-                                    : unit1.equals("Kilometro por litro")
-                                            ? (unit2.equals("Milla por galon americano") ? "Multiplicar el valor de consumo de combustible por 2.352"
-                                                    : unit2.equals("Millas por galon (imperial)") ? "Multiplicar el valor de consumo de combustible por 2.825"
-                                                            : unit2.equals("Litro por 100 kilometros") ? "100/(1 km/L) = 100 L/100 km"
-                                                                    : "")
-                                            : unit1.equals("Litro por 100 kilometros")
-                                                    ? (unit2.equals("Milla por galon americano") ? "235.215/(1 US mpg) = 235.215 L/100 km"
-                                                            : unit2.equals("Millas por galon (imperial)") ? "282.481/(1 I mpg) = 282.481 L/100 km"
-                                                                    : unit2.equals("Kilometro por litro") ? "100/(1 km/L) = 100 L/100 km"
-                                                                            : "")
-                                                    : "")
-                    : (unit1.equals("Hercio")
-                            ? (unit2.equals("Kilohercio") ? "Multiplicar el valor de hercio por 1000"
-                                    : unit2.equals("Megahercio") ? "Multiplicar el valor de hercio por 1000000"
-                                            : unit2.equals("Gigahercio") ? "Multiplicar el valor de hercio por 1000000000"
-                                                    : "")
-                            : unit1.equals("Kilohercio")
-                                    ? (unit2.equals("Hercio") ? "Divide el valor de kilohercio entre 1000"
-                                            : unit2.equals("Megahercio") ? "Multiplicar el valor de kilohercio por 1000"
-                                                    : unit2.equals("Gigahercio") ? "Multiplicar el valor de kilohercio por 1000000"
-                                                            : "")
-                                    : unit1.equals("Megahercio")
-                                            ? (unit2.equals("Hercio") ? "Multiplicar el valor de megahercio por 1000000"
-                                                    : unit2.equals("Kilohercio") ? "Multiplicar el valor de megahercio por 1000"
-                                                            : unit2.equals("Gigahercio") ? "Multiplicar el valor de megahercio por 1000"
-                                                                    : "")
-                                            : unit1.equals("Gigahercio")
-                                                    ? (unit2.equals("Hercio") ? "Multiplicar el valor de gigahercio por 1000000000"
-                                                            : unit2.equals("Kilohercio") ? "Multiplicar el valor de gigahercio por 1000000"
-                                                                    : unit2.equals("Megahercio") ? "Multiplicar el valor de gigahercio por 1000"
-                                                                            : "")
-                                                    : "");
+                        String key = unit1 + "-" + unit2;
 
-            jTextField2.setText(String.valueOf(result));
-            jLabel2.setText("Formula: " + formula);
+                        double result = Optional.ofNullable(conversionFactors.get(unit3))
+                                .map(factors -> {
+                                    double factor = factors.getOrDefault(key, 1.0);
+                                    return isDivision.getOrDefault(key, false) ? factor / inputValue : factor * inputValue;
+                                })
+                                .orElse(inputValue);
+
+                        String formula = Optional.ofNullable(conversionFormulas.get(unit3))
+                                .map(formulas -> formulas.getOrDefault(key, ""))
+                                .orElse("");
+
+                        jTextField2.setText(String.valueOf(result));
+                        jLabel2.setText("Formula: " + formula);
+                    });
         }
-    }
-});
-   jTextField2.addKeyListener(new KeyAdapter() {
-    @Override
-    public void keyReleased(KeyEvent e) {
-        System.out.println("TextField 2: " + jTextField2.getText());
-        String value = jTextField2.getText();
-        if (!value.isEmpty()) {
-            double inputValue = Double.parseDouble(value);
-            String unit1 = (String) jComboBox1.getSelectedItem();
-            String unit2 = (String) jComboBox2.getSelectedItem();
-            String unit3 = (String) jComboBox3.getSelectedItem();
+    });
 
-            double result = unit3.equals("Consumo de combustible")
-                    ? (unit2.equals("Milla por galon americano")
-                            ? (unit1.equals("Millas por galon (imperial)") ? inputValue / 1.201 : unit1.equals("Kilometro por litro") ? inputValue / 2.352 : unit1.equals("Litro por 100 kilometros") ? 235.215 / inputValue : inputValue)
-                            : unit2.equals("Millas por galon (imperial)")
-                            ? (unit1.equals("Milla por galon americano") ? inputValue * 0.83267 : unit1.equals("Kilometro por litro") ? inputValue / 2.825 : unit1.equals("Litro por 100 kilometros") ? 282.481 / inputValue : inputValue)
-                            : unit2.equals("Kilometro por litro")
-                            ? (unit1.equals("Milla por galon americano") ? inputValue / 0.425144 : unit1.equals("Millas por galon (imperial)") ? inputValue * 2.825 : unit1.equals("Litro por 100 kilometros") ? 100 / inputValue : inputValue)
-                            : unit2.equals("Litro por 100 kilometros")
-                            ? (unit1.equals("Milla por galon americano") ? 235.215 / inputValue : unit1.equals("Millas por galon (imperial)") ? 282.481 / inputValue : unit1.equals("Kilometro por litro") ? 100 / inputValue : inputValue)
-                            : inputValue)
-                    : unit3.equals("Frecuencia")
-                    ? (unit2.equals("Hercio")
-                            ? (unit1.equals("Kilohercio") ? inputValue / 1000 : unit1.equals("Megahercio") ? inputValue / 1000000 : unit1.equals("Gigahercio") ? inputValue / 1000000000 : inputValue)
-                            : unit2.equals("Kilohercio")
-                            ? (unit1.equals("Hercio") ? inputValue * 1000 : unit1.equals("Megahercio") ? inputValue / 1000 : unit1.equals("Gigahercio") ? inputValue / 1000000 : inputValue)
-                            : unit2.equals("Megahercio")
-                            ? (unit1.equals("Hercio") ? inputValue * 1000000 : unit1.equals("Kilohercio") ? inputValue * 1000 : unit1.equals("Gigahercio") ? inputValue / 1000 : inputValue)
-                            : unit2.equals("Gigahercio")
-                            ? (unit1.equals("Hercio") ? inputValue * 1000000000 : unit1.equals("Kilohercio") ? inputValue * 1000000 : unit1.equals("Megahercio") ? inputValue * 1000 : inputValue)
-                            : inputValue)
-                    : inputValue;
-            jLabel2.setText(unit3.equals("Consumo de combustible")
-                    ? (unit2.equals("Milla por galon americano")
-                            ? (unit1.equals("Millas por galon (imperial)") ? "Fórmula: divide el valor de consumo de combustible entre 1.201" : unit1.equals("Kilometro por litro") ? "Fórmula: Multiplicar el valor de consumo de combustible por 2.352" : unit1.equals("Litro por 100 kilometros") ? "Fórmula: 235.215/(L/100 km) = US mpg" : "")
-                            : unit2.equals("Millas por galon (imperial)")
-                            ? (unit1.equals("Milla por galon americano") ? "Fórmula: Multiplicar el valor de consumo de combustible por 1.201" : unit1.equals("Kilometro por litro") ? "Fórmula: para obtener un resultado aproximado, multiplica el valor de consumo de combustible por 2.825" : unit1.equals("Litro por 100 kilometros") ? "Fórmula: 282.481/(L/100 km) = I mpg" : "")
-                            : unit2.equals("Kilometro por litro")
-                            ? (unit1.equals("Milla por galon americano") ? "Fórmula: divide el valor de consumo de combustible entre 2.352" : unit1.equals("Millas por galon (imperial)") ? "Fórmula: para obtener un resultado aproximado, divide el valor de consumo de combustible entre 2.825" : unit1.equals("Litro por 100 kilometros") ? "Fórmula: 100/(L/100 km) = km/L" : "")
-                            : unit2.equals("Litro por 100 kilometros")
-                            ? (unit1.equals("Milla por galon americano") ? "Fórmula: 235.215/(US mpg) = L/100 km" : unit1.equals("Millas por galon (imperial)") ? "Fórmula: 282.481/(I mpg) = L/100 km" : unit1.equals("Kilometro por litro") ? "Fórmula: 100/(km/L) = L/100 km" : "")
-                            : "")
-                    : unit3.equals("Frecuencia")
-                    ? (unit2.equals("Hercio")
-                            ? (unit1.equals("Kilohercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1000" : unit1.equals("Megahercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1e+6" : unit1.equals("Gigahercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1e+9" : "")
-                            : unit2.equals("Kilohercio")
-                            ? (unit1.equals("Hercio") ? "Fórmula: divide el valor de frecuencia entre 1000" : unit1.equals("Megahercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1000" : unit1.equals("Gigahercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1e+6" : "")
-                            : unit2.equals("Megahercio")
-                            ? (unit1.equals("Hercio") ? "Fórmula: divide el valor de frecuencia entre 1e+6" : unit1.equals("Kilohercio") ? "Fórmula: divide el valor de frecuencia entre 1000" : unit1.equals("Gigahercio") ? "Fórmula: Multiplicar el valor de frecuencia por 1000" : "")
-                            : unit2.equals("Gigahercio")
-                            ? (unit1.equals("Hercio") ? "Fórmula: divide el valor de frecuencia entre 1e+9" : unit1.equals("Kilohercio") ? "Fórmula: divide el valor de frecuencia entre 1e+6" : unit1.equals("Megahercio") ? "Fórmula: divide el valor de frecuencia entre 1000" : "")
-                            : "")
-                    : "");
+    jTextField2.addKeyListener(new KeyAdapter() {
+        @Override
+        public void keyReleased(KeyEvent e) {
+            System.out.println("TextField 2: " + jTextField2.getText());
+            Optional.ofNullable(jTextField2.getText())
+                    .filter(value -> !value.isEmpty())
+                    .map(Double::parseDouble)
+                    .ifPresent(inputValue -> {
+                        String unit1 = Optional.ofNullable((String) jComboBox1.getSelectedItem()).orElse("");
+                        String unit2 = Optional.ofNullable((String) jComboBox2.getSelectedItem()).orElse("");
+                        String unit3 = Optional.ofNullable((String) jComboBox3.getSelectedItem()).orElse("");
 
-            jTextField1.setText(String.valueOf(result));
+                        String key = unit2 + "-" + unit1;
+
+                        double result = Optional.ofNullable(conversionFactors.get(unit3))
+                                .map(factors -> {
+                                    double factor = factors.getOrDefault(key, 1.0);
+                                    return isDivision.getOrDefault(key, false) ? factor / inputValue : factor * inputValue;
+                                })
+                                .orElse(inputValue);
+
+                        String formula = Optional.ofNullable(conversionFormulas.get(unit3))
+                                .map(formulas -> formulas.getOrDefault(key, ""))
+                                .orElse("");
+
+                        jTextField1.setText(String.valueOf(result));
+                        jLabel1.setText("Formula: " + formula);
+                    });
         }
-    }
-});
+    });
     
 }
     // Variables declaration - do not modify//GEN-BEGIN:variables
